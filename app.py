@@ -1,30 +1,3 @@
-"""
-Kampüsce — Offline University Knowledge & Verification Assistant
-=====================================================================
-Tek dosyalık (single-file) çalışan uygulama.
-
-Bu dosya şunları içerir:
-  - SQLite tabanlı bilgi tabanı (documents / chunks / queries / answers)
-  - PDF / TXT / MD belge işleme ve anlam bütünlüğünü koruyan chunking
-  - Microsoft Foundry Local üzerinden embedding + LLM entegrasyonu
-    (OpenAI uyumlu local REST arayüzü üzerinden, SDK sürümünden bağımsız)
-  - Cosine similarity ile retrieval (TOP-K + relevance threshold)
-  - Hallucination'ı engelleyen RAG prompt mimarisi
-    (verified / partial / not_found)
-  - REST API (FastAPI)
-  - Tek parça, modern web arayüzü (bu dosyanın içine gömülü HTML/CSS/JS)
-
-Çalıştırmak için:
-    pip install -r requirements.txt
-    cp .env.example .env
-    # Foundry Local'ı ayrı bir terminalde çalıştırın, örn:
-    #   foundry model run phi-3.5-mini
-    #   foundry model run qwen3-embedding-0.6b
-    python app.py
-
-Sonra tarayıcıda: http://127.0.0.1:8000
-"""
-
 from __future__ import annotations
 
 import hashlib
@@ -49,24 +22,22 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel
 
-# pypdf is optional at import time so the app can still boot and explain
-# itself clearly if it's missing, per the "no raw tracebacks" requirement.
+
 try:
     from pypdf import PdfReader
     PYPDF_AVAILABLE = True
-except ImportError:  # pragma: no cover
+except ImportError:  
     PYPDF_AVAILABLE = False
 
 try:
     from openai import OpenAI
     OPENAI_SDK_AVAILABLE = True
-except ImportError:  # pragma: no cover
+except ImportError:  
     OPENAI_SDK_AVAILABLE = False
 
 
-# =====================================================================
-# LOGGING
-# =====================================================================
+
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)-8s [%(name)s] %(message)s",
@@ -75,9 +46,6 @@ logging.basicConfig(
 log = logging.getLogger("univerify")
 
 
-# =====================================================================
-# CONFIG
-# =====================================================================
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
 
@@ -127,9 +95,6 @@ CFG.db_abs().parent.mkdir(parents=True, exist_ok=True)
 CFG.docs_abs().mkdir(parents=True, exist_ok=True)
 
 
-# =====================================================================
-# DATABASE
-# =====================================================================
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS documents (
     id           TEXT PRIMARY KEY,
@@ -208,10 +173,6 @@ def init_db():
 def now_iso() -> str:
     return datetime.now().isoformat(timespec="seconds")
 
-
-# =====================================================================
-# DOCUMENT READING
-# =====================================================================
 class DocumentReadError(Exception):
     pass
 
@@ -269,9 +230,6 @@ def extract_pages(path: Path, ext: str) -> list[PageText]:
     raise DocumentReadError(f"Desteklenmeyen dosya türü: {ext}")
 
 
-# =====================================================================
-# CHUNKING
-# =====================================================================
 ARTICLE_PATTERN = re.compile(r"(madde\s+\d+[a-zçğıöşü]*)", re.IGNORECASE)
 ARTICLE_START_PATTERN = re.compile(r"^\s*madde\s+\d+", re.IGNORECASE)
 SECTION_PATTERN = re.compile(r"^(bölüm|kısım|başlık)\s+.+", re.IGNORECASE | re.MULTILINE)
@@ -295,15 +253,11 @@ def _insert_article_breaks(text: str) -> str:
 
 
 def _split_into_paragraphs(text: str) -> list[str]:
-    # Anlam bütünlüğünü korumak için paragrafları rastgele ortadan bölmüyoruz;
-    # önce boş satırlarla paragraflara ayırıyoruz (Madde başlıkları da ayrı
-    # paragraf sınırı sayılır, bkz. _insert_article_breaks).
     text = _insert_article_breaks(text)
     raw = re.split(r"\n\s*\n", text)
     paragraphs = [p.strip() for p in raw if p.strip()]
     if paragraphs:
         return paragraphs
-    # Paragraf ayrımı bulunamazsa tek satırları da paragraf say.
     return [line.strip() for line in text.splitlines() if line.strip()]
 
 
@@ -364,9 +318,6 @@ def chunk_pages(pages: list[PageText]) -> list[Chunk]:
             last_article = _current_article(para, last_article)
             last_section = _current_section(para, last_section)
 
-            # Bir "Madde N" başlığı yeni bir paragrafla başlıyorsa, önceki maddenin
-            # chunk'ını kapatıyoruz: her madde kendi anlam bütünlüğünü korusun ve
-            # kaynak gösterimi (Madde X) net olsun.
             if starts_new_article and buffer:
                 flush()
                 buffer_article, buffer_section = last_article, last_section
@@ -384,10 +335,6 @@ def chunk_pages(pages: list[PageText]) -> list[Chunk]:
 
     return chunks
 
-
-# =====================================================================
-# FOUNDRY LOCAL CLIENT (embedding + chat) — OpenAI uyumlu REST arayüzü
-# =====================================================================
 DEFAULT_FOUNDRY_ENDPOINT = "http://localhost:5273/v1"
 
 
@@ -411,10 +358,8 @@ class FoundryClient:
         self._client: Optional["OpenAI"] = None
         self._last_error: Optional[str] = None
 
-    # -- endpoint discovery -------------------------------------------------
+   
     def _discover_endpoint_via_cli(self) -> Optional[str]:
-        # Foundry Local CLI sürümleri arasında alt komut adı değişebiliyor
-        # ("service status" veya "server status"); ikisini de deniyoruz.
         for cmd in (["foundry", "server", "status"], ["foundry", "service", "status"]):
             try:
                 result = subprocess.run(
@@ -445,16 +390,12 @@ class FoundryClient:
         if not OPENAI_SDK_AVAILABLE:
             raise FoundryUnavailable("'openai' paketi kurulu değil. 'pip install openai' çalıştırın.")
         if self._client is None:
-            # CPU üzerinde büyük modellerin JSON formatlı cevap üretmesi uzun
-            # sürebilir; kısa bir timeout gereksiz "AI servisine ulaşılamıyor"
-            # hatalarına yol açtığı için yüksek tutuyoruz.
             self._client = OpenAI(
                 base_url=self.endpoint(), api_key=self.cfg.foundry_api_key,
                 max_retries=0, timeout=240.0,
             )
         return self._client
 
-    # -- model discovery ------------------------------------------------
     def _list_models_raw(self) -> list[str]:
         """Raises if Foundry Local is unreachable — used for real health checks."""
         models = self.client().models.list()
@@ -484,15 +425,13 @@ class FoundryClient:
                 return m
         return available[0]
 
-    # -- health -----------------------------------------------------------
     def health(self) -> dict:
         try:
             models = self._list_models_raw()
             return {"connected": True, "endpoint": self.endpoint(), "models": models, "error": None}
         except Exception as e:
             return {"connected": False, "endpoint": self.endpoint(), "models": [], "error": str(e)}
-
-    # -- embeddings ---------------------------------------------------------
+        
     def embed(self, texts: list[str], model: str) -> list[list[float]]:
         try:
             resp = self.client().embeddings.create(model=model, input=texts)
@@ -504,7 +443,6 @@ class FoundryClient:
                 f"ve modelin indirildiğinden emin olun. Detay: {e}"
             ) from e
 
-    # -- chat -----------------------------------------------------------
     def chat(self, model: str, system_prompt: str, user_prompt: str, temperature: float) -> str:
         try:
             resp = self.client().chat.completions.create(
@@ -526,10 +464,6 @@ class FoundryClient:
 
 FOUNDRY = FoundryClient(CFG)
 
-
-# =====================================================================
-# EMBEDDING STORAGE HELPERS
-# =====================================================================
 def embedding_to_text(vec: list[float]) -> str:
     return json.dumps(vec)
 
@@ -551,9 +485,6 @@ def cosine_similarity_matrix(query: np.ndarray, matrix: np.ndarray) -> np.ndarra
     return (matrix @ query) / norms
 
 
-# =====================================================================
-# INGESTION PIPELINE
-# =====================================================================
 def compute_file_hash(path: Path) -> str:
     h = hashlib.sha256()
     with open(path, "rb") as f:
@@ -563,7 +494,7 @@ def compute_file_hash(path: Path) -> str:
 
 
 def safe_filename(filename: str) -> str:
-    name = Path(filename).name  # path traversal koruması
+    name = Path(filename).name 
     name = re.sub(r"[^A-Za-z0-9ÇĞİÖŞÜçğıöşü _.-]", "_", name)
     return name or "belge"
 
@@ -579,7 +510,6 @@ def ingest_document(stored_path: Path, original_filename: str, ext: str) -> dict
         if existing:
             if existing["status"] == "ready":
                 raise ValueError("Bu belge (aynı içerikle) zaten yüklenmiş.")
-            # Önceki deneme hata vermiş veya yarım kalmışsa temiz baştan işleriz.
             conn.execute("DELETE FROM chunks WHERE document_id = ?", (existing["id"],))
             conn.execute("DELETE FROM documents WHERE id = ?", (existing["id"],))
         conn.execute(
@@ -674,9 +604,6 @@ def reindex_all_documents():
     return results
 
 
-# =====================================================================
-# RETRIEVAL
-# =====================================================================
 @dataclass
 class RetrievedChunk:
     chunk_id: str
@@ -719,10 +646,6 @@ def retrieve(question: str) -> list[RetrievedChunk]:
     above_threshold = [c for c in scored if c.similarity >= CFG.similarity_threshold]
     return above_threshold[:CFG.top_k]
 
-
-# =====================================================================
-# PROMPT ENGINEERING
-# =====================================================================
 SYSTEM_PROMPT = """Sen Kampüsce adlı bir üniversite yönetmelik doğrulama asistanısın.
 
 KURALLARIN (kesinlikle uy):
@@ -768,8 +691,7 @@ def extract_json_block(text: str) -> Optional[dict]:
         return json.loads(text)
     except json.JSONDecodeError:
         pass
-    # Küçük modeller bazen aynı JSON'u art arda tekrar edebilir; metindeki
-    # İLK geçerli JSON nesnesini alıp gerisini görmezden geliyoruz.
+
     start = text.find("{")
     while start != -1:
         try:
@@ -894,10 +816,6 @@ def run_rag(question: str) -> dict:
         "embedding_model": CFG.embedding_model,
     }
 
-
-# =====================================================================
-# FASTAPI APP
-# =====================================================================
 app = FastAPI(title="Kampüsce", version="1.0.0")
 
 
@@ -936,8 +854,6 @@ def on_startup():
                      "ancak sohbet/embedding istekleri Foundry Local çalışana kadar hata verecek.",
                      health.get("error"))
 
-
-# ---- health ------------------------------------------------------------
 @app.get("/api/health")
 def api_health():
     health = FOUNDRY.health()
@@ -956,7 +872,6 @@ def api_health():
     }
 
 
-# ---- chat ---------------------------------------------------------------
 @app.post("/api/chat")
 def api_chat(req: ChatRequest):
     question = (req.question or "").strip()
@@ -989,7 +904,6 @@ def api_chat(req: ChatRequest):
     return result
 
 
-# ---- documents ------------------------------------------------------------
 @app.get("/api/documents")
 def api_list_documents():
     with db_conn() as conn:
@@ -1055,7 +969,6 @@ def api_reindex():
         raise HTTPException(500, f"Reindex sırasında hata oluştu: {e}")
 
 
-# ---- history ------------------------------------------------------------
 @app.get("/api/history")
 def api_history(limit: int = 100):
     with db_conn() as conn:
@@ -1085,7 +998,6 @@ def api_history(limit: int = 100):
     return {"history": items}
 
 
-# ---- stats ------------------------------------------------------------
 @app.get("/api/stats")
 def api_stats():
     with db_conn() as conn:
@@ -1106,8 +1018,6 @@ def api_stats():
         "status_breakdown": {r["verification_status"]: r["c"] for r in status_breakdown},
     }
 
-
-# ---- settings ------------------------------------------------------------
 @app.get("/api/settings")
 def api_get_settings():
     return {
@@ -1139,14 +1049,12 @@ def api_update_settings(update: SettingsUpdate):
     return api_get_settings()
 
 
-# ---- frontend ------------------------------------------------------------
 @app.get("/", response_class=HTMLResponse)
 def index():
     return HTMLResponse(content=FRONTEND_HTML)
 
 
 
-# FRONTEND (tek dosya — gömülü HTML / CSS / JS)
 
 FRONTEND_HTML = """<!DOCTYPE html>
 <html lang="tr" data-theme="light">
@@ -2012,10 +1920,6 @@ uploadZone.addEventListener('drop', e => { if(e.dataTransfer.files.length) handl
 </html>
 """
 
-
-# =====================================================================
-# ENTRYPOINT
-# =====================================================================
 if __name__ == "__main__":
     import uvicorn
     init_db()
