@@ -228,18 +228,7 @@ test için:
 - Ayarlar sayfasındaki değişiklikler bellek içi (runtime) çalışır; sunucu
   yeniden başlatıldığında `.env` dosyasındaki değerlere döner.
 
-## 13. Gelecek Geliştirmeler
 
-- 🔎 **Kural Dedektifi** — öğrencinin serbest metinle anlattığı durumu
-  (örn. "2. sınıfım, 3 dersim kaldı") ilgili maddelerle otomatik eşleştirme
-- ⚖️ **Çelişki tespiti** — iki belgede aynı konuda farklı bilgi varsa uyarı
-- 📊 **Knowledge Base Analytics** — en çok sorulan konuların analizi
-- ⭐ **Kaynağı değerlendir** — kullanıcının cevabı faydalı bulup bulmadığını işaretlemesi
-- 📌 **Favoriler** — sık sorulan soruların kaydedilmesi
-
-## 14. Ekran Görüntüleri
-
-_(Sunumunuz için buraya arayüzden aldığınız ekran görüntülerini ekleyebilirsiniz: Yeni Sorgu ekranı, bir "DOĞRULANDI" cevap kartı, Belgeler sayfası, karanlık tema.)_
 
 ---
 
