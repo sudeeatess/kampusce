@@ -1,0 +1,9 @@
+data/*.db
+data/*.db-*
+documents/*
+!documents/.gitkeep
+.env
+__pycache__/
+*.pyc
+.venv/
+venv/
