@@ -1,10 +1,10 @@
-# 🎓 UniVerify AI
+# 🎓 Kampüsce AI
 
 ### Offline University Knowledge & Verification Assistant
 
-> **"Cevabı tahmin etmez. Kaynağını bulur."**
+> **"Sorunu sor, üniversitenin kaynağından öğren."**
 
-UniVerify AI, üniversite öğrencilerinin yönetmelik, staj yönergesi, sınav
+kampüsce AI, üniversite öğrencilerinin yönetmelik, staj yönergesi, sınav
 kuralları, burs şartları ve akademik takvim gibi resmi belgeler içindeki
 bilgiyi hızlıca bulmasını sağlayan, **tamamen offline çalışan** bir RAG
 (Retrieval-Augmented Generation) asistanıdır. Hiçbir soru veya belge
@@ -23,7 +23,7 @@ zarar verebilir.
 
 ## 2. Çözüm
 
-UniVerify AI, **yalnızca kendi bilgi tabanındaki belgelerden cevap üretir.**
+kampüsce AI, **yalnızca kendi bilgi tabanındaki belgelerden cevap üretir.**
 Her cevap üç durumdan biriyle etiketlenir:
 
 | Durum | Anlamı |
@@ -59,13 +59,13 @@ Her cevabın yanında **kaynak belge, madde ve sayfa numarası** ile bir
 ## 5. Mimari
 
 ```
-UniVerifyAI/
+kampüsceAI/
 ├── app.py                 ← TEK DOSYA: backend + gömülü frontend (bu proje burada)
 ├── requirements.txt
 ├── .env.example
 ├── documents/              ← yüklenen belgelerin fiziksel olarak saklandığı klasör
 ├── data/
-│   └── univerify.db        ← SQLite veritabanı (ilk çalıştırmada otomatik oluşur)
+│   └── kampüsce.db        ← SQLite veritabanı (ilk çalıştırmada otomatik oluşur)
 ├── ornek_belgeler/          ← demo için hazır örnek yönetmelik metinleri
 └── README.md
 ```
@@ -123,7 +123,7 @@ yeniden işlemek isterseniz "Yeniden İndeksle" butonunu kullanın.
 
 ## 7. Veritabanı
 
-SQLite, `data/univerify.db` dosyasında saklanır — ek bir veritabanı
+SQLite, `data/kampüsce.db` dosyasında saklanır — ek bir veritabanı
 sunucusu kurmanıza gerek yoktur. Şema:
 
 - **documents** — yüklenen her belgenin meta verisi ve işlem durumu
@@ -137,7 +137,7 @@ sunucusu kurmanıza gerek yoktur. Şema:
    (veya kendi PDF/TXT/MD dosyalarınızı) yükleyin.
 2. **Yeni Sorgu** sayfasında örnek sorulardan birine tıklayın veya kendi
    sorunuzu yazın.
-3. Cevap; doğrulama durumu (mühür ikonu), güven yüzdesi ve tıklanabilir
+3. Cevap; doğrulama durumu , güven yüzdesi ve tıklanabilir
    kaynak kartlarıyla birlikte gelir. "Teknik Detaylar" panelinden hangi
    modelin ve kaç chunk'ın kullanıldığını görebilirsiniz.
 
@@ -182,9 +182,6 @@ test için:
 - Ayarlar sayfasındaki değişiklikler bellek içi (runtime) çalışır; sunucu
   yeniden başlatıldığında `.env` dosyasındaki değerlere döner.
 
-
-
----
 
 **Öncelik sırası:** çalışması → doğru RAG mimarisi → kaynak gösterme →
 hallucination kontrolü → profesyonel UI → test → dokümantasyon → ekstra özellikler.
