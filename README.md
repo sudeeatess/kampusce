@@ -8,7 +8,7 @@ kampüsce AI, üniversite öğrencilerinin yönetmelik, staj yönergesi, sınav
 kuralları, burs şartları ve akademik takvim gibi resmi belgeler içindeki
 bilgiyi hızlıca bulmasını sağlayan, **tamamen offline çalışan** bir RAG
 (Retrieval-Augmented Generation) asistanıdır. Hiçbir soru veya belge
-internete/cloud servislere gönderilmez — tüm çıkarım (inference) **Microsoft
+internete/cloud servislere gönderilmez — tüm çıkarım **Microsoft
 Foundry Local** üzerinden, kullanıcının kendi makinesinde gerçekleşir.
 
 ---
@@ -17,7 +17,7 @@ Foundry Local** üzerinden, kullanıcının kendi makinesinde gerçekleşir.
 
 Öğrenciler; staj süresi, mazeret sınavı şartları, burs kriterleri gibi
 sorularının cevabını onlarca sayfalık PDF yönetmelikler arasında arayarak
-kaybeder. Genel amaçlı bir chatbot'a sormak ise "uydurma" (hallucination)
+kaybeder. Genel amaçlı bir chatbot'a sormak ise "uydurma"
 riski taşır — yanlış bir "staj süresi 20 gündür" cevabı öğrenciye ciddi
 zarar verebilir.
 
@@ -33,7 +33,7 @@ Her cevap üç durumdan biriyle etiketlenir:
 | 🔴 **BİLGİ BULUNAMADI** | Bilgi tabanında yeterli bilgi yok — sistem tahmin etmez |
 
 Her cevabın yanında **kaynak belge, madde ve sayfa numarası** ile bir
-**benzerlik (relevance) yüzdesi** gösterilir.
+**benzerlik yüzdesi** gösterilir.
 
 ## 3. Özellikler
 
@@ -42,11 +42,11 @@ Her cevabın yanında **kaynak belge, madde ve sayfa numarası** ile bir
   (OpenAI uyumlu REST arayüzü, cloud API'siz)
 - SQLite tabanlı bilgi tabanı + saf Python/NumPy cosine similarity retrieval
 - Top-K ve benzerlik eşiği (relevance threshold) ile ilgisiz belgelerin elenmesi
-- Hallucination'ı engelleyen katı RAG prompt mimarisi (verified/partial/not_found)
-- Modern, "dijital mühür / noter" temalı özgün arayüz (klasik chatbot değil)
+- Hallucination'ı engelleyen katı RAG prompt mimarisi
+- Modern,özgün arayüz 
 - Karanlık/aydınlık tema, arama geçmişi, bilgi tabanı istatistikleri, ayarlar
 - Güvenli dosya yükleme (uzantı kontrolü, boyut limiti, path-traversal koruması)
-- Boş dosya / bozuk PDF / servis kapalı gibi durumlarda kullanıcı dostu hata mesajları (asla ham traceback yok)
+- Boş dosya / bozuk PDF / servis kapalı gibi durumlarda kullanıcı dostu hata mesajları
 
 ## 4. Teknolojiler
 
