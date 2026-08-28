@@ -103,54 +103,8 @@ Foundry Local LLM (katı system prompt: "sadece context'i kullan")
 JSON cevap: answer + verification_status + sources
 ```
 
-## 6. Kurulum
 
-### 6.1. Gereksinimler
-
-- Python 3.11 veya üzeri
-- [Microsoft Foundry Local](https://learn.microsoft.com/azure/ai-foundry/foundry-local/) kurulu olmalı (Windows/macOS)
-
-### 6.2. Adımlar
-
-```bash
-# 1) Bağımlılıkları kurun
-pip install -r requirements.txt
-
-# 2) Ortam dosyasını oluşturun
-cp .env.example .env
-
-# 3) Foundry Local'da bir sohbet modeli ve bir embedding modeli başlatın
-#    (ayrı bir terminalde, arka planda çalışır durumda kalmalı)
-foundry model run phi-3.5-mini
-foundry model run qwen3-embedding-0.6b
-
-# Kurulu/indirilebilir modelleri görmek için:
-foundry model list
-
-# 4) .env dosyasında model adlarını (opsiyonel) güncelleyin
-#    Boş bırakırsanız uygulama Foundry Local'daki ilk uygun modeli otomatik seçer.
-
-# 5) Uygulamayı başlatın
-python app.py
-```
-
-Tarayıcıda **http://127.0.0.1:8000** adresini açın.
-
-### 6.3. Foundry Local Kurulumu (özet)
-
-Foundry Local, Microsoft'un yerel/offline LLM çıkarım motorudur ve
-çalıştığında OpenAI uyumlu bir REST endpoint açar. UniVerify AI bu
-endpoint'e `openai` Python istemcisiyle bağlanır — bu sayede Foundry
-Local'ın SDK sürümü değişse bile uygulama çalışmaya devam eder.
-
-Kurulum adımları ve desteklenen donanım/işletim sistemi listesi için resmi
-Microsoft dokümantasyonuna bakın. Uygulama, endpoint'i şu sırayla bulur:
-
-1. `.env` içindeki `FOUNDRY_ENDPOINT` (belirtilmişse)
-2. `foundry service status` komutunun çıktısından otomatik keşif
-3. Varsayılan: `http://localhost:5273/v1`
-
-## 7. Model Ayarları
+## 6. Model Ayarları
 
 `.env` dosyasındaki ilgili değişkenler:
 
@@ -167,7 +121,7 @@ TEMPERATURE=0.2
 bozmadan). Ayarları değiştirdikten sonra mevcut belgeleri yeni parametrelerle
 yeniden işlemek isterseniz "Yeniden İndeksle" butonunu kullanın.
 
-## 8. Veritabanı
+## 7. Veritabanı
 
 SQLite, `data/univerify.db` dosyasında saklanır — ek bir veritabanı
 sunucusu kurmanıza gerek yoktur. Şema:
@@ -177,7 +131,7 @@ sunucusu kurmanıza gerek yoktur. Şema:
 - **queries** — sorulan her soru
 - **answers** — her sorunun cevabı, doğrulama durumu, güven skoru ve kaynakları
 
-## 9. Kullanım
+## 8. Kullanım
 
 1. **Belgeler** sayfasından `ornek_belgeler/` klasöründeki örnek yönetmelikleri
    (veya kendi PDF/TXT/MD dosyalarınızı) yükleyin.
@@ -187,7 +141,7 @@ sunucusu kurmanıza gerek yoktur. Şema:
    kaynak kartlarıyla birlikte gelir. "Teknik Detaylar" panelinden hangi
    modelin ve kaç chunk'ın kullanıldığını görebilirsiniz.
 
-## 10. Demo Senaryosu
+## 9. Senaryo
 
 `ornek_belgeler/staj_yonergesi.txt` yüklendikten sonra:
 
@@ -200,7 +154,7 @@ sunucusu kurmanıza gerek yoktur. Şema:
 Bu üç senaryo, sistemin temel değer önerisini gösterir: **cevap
 verebildiğinde cevap verir, veremediğinde uydurmaz.**
 
-## 11. Testler
+## 10. Testler
 
 Otomatik testler için `pytest` kullanılabilir (Foundry Local'ın çalışır
 durumda olması gerekir — embedding/LLM çağrıları mock'lanmamıştır, bilinçli
@@ -212,9 +166,9 @@ test için:
   karşılama döner
 - Bilgi tabanı boşken soru sorma → `not_found` + "önce belge yükleyin" uyarısı
 - Yanlış uzantılı dosya, path-traversal'lı dosya adı, boyut limiti aşan dosya
-  → hepsi güvenli şekilde reddedilir (kod içinde manuel olarak test edilmiştir)
+  → hepsi güvenli şekilde reddedilir.
 
-## 12. Proje Sınırlılıkları
+## 11. Proje Sınırlılıkları
 
 - Taranmış (image-based) PDF'lerde OCR desteği yoktur — metin katmanı
   olmayan PDF'ler okunamaz olarak işaretlenir.
